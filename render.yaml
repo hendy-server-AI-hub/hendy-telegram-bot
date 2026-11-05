@@ -1,0 +1,34 @@
+# Render Blueprint: Telegram bot runs as a Background Worker (long polling).
+# Add secrets in Render Dashboard -> Environment; do not commit their values.
+services:
+  - type: worker
+    name: hendy-telegram-bot
+    runtime: python
+    region: singapore
+    plan: starter
+    buildCommand: pip install --no-cache-dir -r requirements.txt
+    startCommand: python -m app.main
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.4
+      - key: GITHUB_ORG
+        value: hendy-server-AI-hub
+      - key: OPENAI_MODEL
+        value: gpt-6-luna
+      - key: HTTP_TIMEOUT_SECONDS
+        value: "20"
+      - key: LOG_LEVEL
+        value: INFO
+      - key: BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_ADMIN_IDS
+        sync: false
+      - key: GITHUB_TOKEN
+        sync: false
+      - key: RENDER_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: SERVER_HEALTH_URLS
+        sync: false
