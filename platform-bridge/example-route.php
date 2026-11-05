@@ -3,31 +3,35 @@
 declare(strict_types=1);
 
 /*
- * Example integration from the existing PHP application's API router.
- * Replace each provider with calls to the application's existing domain
- * services. Never return raw rows or payment/personal data.
+ * Mount this dispatcher from the PHP application's API router.
+ * The existing application container should supply each data provider.
  *
- * Route: GET /api/integrations/telegram/v1/{status|jobs|orders|metrics}
+ * Route pattern:
+ * GET /api/integrations/telegram/v1/{status|jobs|orders|metrics}
+ *
+ * Example:
+ * $providers = [
+ *   'jobs' => fn (): array => [
+ *       'items' => $videoJobs->recentForAdmin(25),
+ *       'total' => $videoJobs->count(),
+ *   ],
+ *   'orders' => fn (): array => [
+ *       'items' => $orders->recentForAdmin(25),
+ *       'total' => $orders->count(),
+ *   ],
+ *   'metrics' => fn (): array => $dashboardMetrics->telegramSafeSummary(),
+ * ];
+ *
+ * Use only the application's existing services, bounded pagination, and
+ * explicitly allowlisted fields. Do not return payment details, password
+ * hashes, sessions, tokens, or full personal records.
  */
 
 require_once __DIR__ . '/HendyTelegramBridge.php';
 
-// These service objects must be created by the existing application container.
-// Example providers should return bounded, allowlisted operational data only.
-$providers = [
-    // 'status' => fn (): array => $healthService->safeStatus(),
-    // 'jobs' => fn (): array => ['items' => $videoJobs->recentForAdmin(25), 'total' => $videoJobs->count()],
-    // 'orders' => fn (): array => ['items' => $orders->recentForAdmin(25), 'total' => $orders->count()],
-    // 'metrics' => fn (): array => $dashboardMetrics->telegramSafeSummary(),
-];
-
-$resource = (string)($_GET['resource'] ?? '');
+// Your router must pass the final path segment as $resource.
+$resource = (string)($routeParameters['resource'] ?? '');
 $token = (string)(getenv('TELEGRAM_BRIDGE_TOKEN') ?: '');
+$providers = $telegramBridgeProviders ?? [];
 
-HendyTelegramBridge::dispatch(
-    $resource,
-    $token,
-    $providers,
-    // Connect the application's existing shared rate limiter here.
-    static fn (): bool => true
-);
+HendyTelegramBridge::dispatch($resource, $token, $providers);
