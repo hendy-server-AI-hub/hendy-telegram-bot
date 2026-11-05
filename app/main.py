@@ -11,10 +11,12 @@ from aiogram.enums import ParseMode
 
 from app.config import load_settings
 from app.handlers import build_router
+from app.handlers.platform import router as platform_router
 from app.middlewares.admin import AdminOnlyMiddleware, RateLimitMiddleware
 from app.services.ai import AIService
 from app.services.api import ApiClient
 from app.services.github import GitHubService
+from app.services.platform import HendyPlatformClient
 from app.services.render import RenderService
 from app.services.security import SecurityService
 from app.services.servers import ServerService
@@ -22,7 +24,6 @@ from app.services.servers import ServerService
 logger = logging.getLogger(__name__)
 
 
-from app.handlers.platform import router as platform_router
 def configure_logging(level: str) -> None:
     logging.basicConfig(
         level=getattr(logging, level),
@@ -51,8 +52,8 @@ async def run() -> None:
         dispatcher.message.middleware(RateLimitMiddleware())
         dispatcher.callback_query.middleware(RateLimitMiddleware())
         dispatcher.include_router(build_router())
-
         dispatcher.include_router(platform_router)
+
         # Dispatcher workflow data is injected into handler arguments by aiogram.
         # Every service shares one bounded aiohttp session for the process lifetime.
         dispatcher["github_service"] = GitHubService(api_client, settings)
@@ -60,6 +61,7 @@ async def run() -> None:
         dispatcher["ai_service"] = AIService(api_client, settings)
         dispatcher["server_service"] = ServerService(settings)
         dispatcher["security_service"] = SecurityService(settings)
+        dispatcher["platform_client"] = HendyPlatformClient.from_env()
 
         try:
             # Long polling and webhooks are mutually exclusive in Telegram.
