@@ -22,6 +22,7 @@ from app.services.servers import ServerService
 logger = logging.getLogger(__name__)
 
 
+from app.handlers.platform import router as platform_router
 def configure_logging(level: str) -> None:
     logging.basicConfig(
         level=getattr(logging, level),
@@ -51,6 +52,7 @@ async def run() -> None:
         dispatcher.callback_query.middleware(RateLimitMiddleware())
         dispatcher.include_router(build_router())
 
+        dispatcher.include_router(platform_router)
         # Dispatcher workflow data is injected into handler arguments by aiogram.
         # Every service shares one bounded aiohttp session for the process lifetime.
         dispatcher["github_service"] = GitHubService(api_client, settings)
