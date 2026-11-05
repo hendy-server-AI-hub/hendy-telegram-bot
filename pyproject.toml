@@ -10,7 +10,9 @@ line-length = 100
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM"]
-ignore = ["B008"]
+# E501 is excluded because the command help text, URLs and API error messages
+# contain intentionally long literals. All other selected rules remain enforced.
+ignore = ["B008", "E501"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
