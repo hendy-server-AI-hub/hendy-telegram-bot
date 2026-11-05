@@ -21,7 +21,11 @@ class ApiClient:
 
     def __init__(self, session: aiohttp.ClientSession, timeout_seconds: int = 20) -> None:
         self.session = session
-        self.timeout = aiohttp.ClientTimeout(total=timeout_seconds, connect=5, sock_read=timeout_seconds)
+        self.timeout = aiohttp.ClientTimeout(
+            total=timeout_seconds,
+            connect=5,
+            sock_read=timeout_seconds,
+        )
 
     async def request(
         self,
@@ -50,15 +54,24 @@ class ApiClient:
                     payload = {"message": "Non-JSON response"}
 
                 if response.status >= 400:
-                    logger.warning("external_api_error status=%s method=%s host=%s", response.status, method, response.url.host)
+                    logger.warning(
+                        "external_api_error status=%s method=%s host=%s",
+                        response.status,
+                        method,
+                        response.url.host,
+                    )
                     raise ApiError(response.status, self._safe_error(response.status))
                 return payload
         except ApiError:
             raise
-        except (asyncio.TimeoutError, aiohttp.ServerTimeoutError) as exc:
+        except (TimeoutError, aiohttp.ServerTimeoutError) as exc:
             raise ApiError(0, "Dịch vụ bên ngoài phản hồi quá thời gian.") from exc
         except aiohttp.ClientError as exc:
-            logger.warning("external_api_connection_error method=%s error_type=%s", method, type(exc).__name__)
+            logger.warning(
+                "external_api_connection_error method=%s error_type=%s",
+                method,
+                type(exc).__name__,
+            )
             raise ApiError(0, "Không thể kết nối dịch vụ bên ngoài.") from exc
 
     @staticmethod
