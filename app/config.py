@@ -91,14 +91,18 @@ class Settings(BaseSettings):
         return normalized
 
     @model_validator(mode="after")
-    def validate_org(self) -> "Settings":
+    def validate_org(self) -> Settings:
         if not self.github_org or not self.github_org.strip():
             raise ValueError("GITHUB_ORG cannot be empty")
         return self
 
     @cached_property
     def admin_ids(self) -> frozenset[int]:
-        return frozenset(int(part.strip()) for part in self.telegram_admin_ids.split(",") if part.strip())
+        return frozenset(
+            int(part.strip())
+            for part in self.telegram_admin_ids.split(",")
+            if part.strip()
+        )
 
     @cached_property
     def server_targets(self) -> tuple[tuple[str, str], ...]:
